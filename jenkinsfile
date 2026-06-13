@@ -1,61 +1,81 @@
 pipeline {
     agent any
+
     tools {
-        // Specify Maven and JDK if needed
-        maven 'maven-3.9.9' 
+        maven 'maven-3.9.9'
         jdk 'java-17'
     }
+
     environment {
-        SONAR_TOKEN = credentials('sonarcloud-token')  // Use the token you added in Jenkins credentials
+        SONAR_TOKEN = credentials('sonarcloud-token')
     }
 
     stages {
-        stage('Checkout') {
+
+        stage('Checkout Code') {
             steps {
-                // Clone the repository from GitHub
                 git branch: 'main', url: 'https://github.com/DharmikDevops/sample-war.git'
             }
         }
-        stage('Build') {
+
+        stage('Build Application') {
             steps {
-                // Build the project using Maven
-                sh 'mvn clean install'
+                sh 'mvn clean package'
             }
         }
-        stage('Test') {
+
+        stage('Run Tests') {
             steps {
-                // Run tests using Maven
                 sh 'mvn test'
             }
         }
-        stage('SonarQube analysis') {
+
+        stage('SonarCloud Analysis') {
             steps {
-                // Run SonarCloud analysis
-                sh '''
+                sh """
                 mvn sonar:sonar \
                 -Dsonar.organization=your-organization \
                 -Dsonar.projectKey=your-project-key \
                 -Dsonar.host.url=https://sonarcloud.io \
                 -Dsonar.login=$SONAR_TOKEN
-                '''
+                """
             }
         }
-        stage('Deploy') {
+
+        stage('Quality Gate Check') {
             steps {
-                // Run Ansible playbook to deploy the application
-                // Inventory file and playbook are in /home/jenkins-agent
-                sh '''
+                echo "Quality Gate validation assumed via SonarCloud dashboard"
+                // Optional future upgrade: waitForQualityGate()
+            }
+        }
+
+        stage('Archive Artifact') {
+            steps {
+                archiveArtifacts artifacts: '**/target/*.war', fingerprint: true
+            }
+        }
+
+        stage('Deploy to Tomcat via Ansible') {
+            steps {
+                sh """
                 ansible-playbook -i /home/jenkins-agent/invent.ini /home/jenkins-agent/deploy.yaml
-                '''
+                """
             }
         }
     }
+
     post {
         success {
-            echo 'Pipeline completed successfully!'
+            echo "Pipeline executed successfully"
         }
+
         failure {
-            echo 'Pipeline failed!'
+            echo "Pipeline failed - check logs"
+        }
+
+        always {
+            echo "Cleaning up workspace..."
+            cleanWs()
         }
     }
 }
