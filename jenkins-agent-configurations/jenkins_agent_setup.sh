@@ -1,84 +1,32 @@
 # Create this bash script under the root user
 
+#!/bin/bash
 
-pipeline {
-    agent any
+# Update the system and install Java (OpenJDK 11)
+sudo yum update -y
+sudo amazon-linux-extras enable corretto11
+sudo yum install -y java-11-amazon-corretto
 
-    tools {
-        maven 'maven-3.9.9'
-        jdk 'java-17'
-    }
+# Create Jenkins agent user
+sudo useradd -m -d /home/jenkins-agent -s /bin/bash jenkins-agent
 
-    environment {
-        SONAR_TOKEN = credentials('sonarcloud-token')
-    }
+# Setup SSH keys for Jenkins agent (use the public key from the controller)
+# Ensure the .ssh directory exists and is correctly permissioned
+sudo mkdir -p /home/jenkins-agent/.ssh
+sudo chmod 700 /home/jenkins-agent/.ssh
 
-    stages {
+# Manually add the public key you copied from the controller/local machine
+echo "add the public key here" | sudo tee /home/jenkins-agent/.ssh/authorized_keys
 
-        stage('Checkout Code') {
-            steps {
-                git branch: 'main', url: 'https://github.com/DharmikDevops/sample-war.git'
-            }
-        }
+# Adjust permissions for the authorized_keys file
+sudo chmod 600 /home/jenkins-agent/.ssh/authorized_keys
+sudo chown -R jenkins-agent:jenkins-agent /home/jenkins-agent/.ssh
 
-        stage('Build Application') {
-            steps {
-                sh 'mvn clean package'
-            }
-        }
+echo "Jenkins agent setup complete. You can now connect via SSH from the Jenkins controller."
 
-        stage('Run Tests') {
-            steps {
-                sh 'mvn test'
-            }
-        }
 
-        stage('SonarCloud Analysis') {
-            steps {
-                sh """
-                mvn sonar:sonar \
-                -Dsonar.organization=your-organization \
-                -Dsonar.projectKey=your-project-key \
-                -Dsonar.host.url=https://sonarcloud.io \
-                -Dsonar.login=$SONAR_TOKEN
-                """
-            }
-        }
 
-        stage('Quality Gate Check') {
-            steps {
-                echo "Quality Gate validation assumed via SonarCloud dashboard"
-                // Optional future upgrade: waitForQualityGate()
-            }
-        }
 
-        stage('Archive Artifact') {
-            steps {
-                archiveArtifacts artifacts: '**/target/*.war', fingerprint: true
-            }
-        }
 
-        stage('Deploy to Tomcat via Ansible') {
-            steps {
-                sh """
-                ansible-playbook -i /home/jenkins-agent/invent.ini /home/jenkins-agent/deploy.yaml
-                """
-            }
-        }
-    }
 
-    post {
-        success {
-            echo "Pipeline executed successfully"
-        }
 
-        failure {
-            echo "Pipeline failed - check logs"
-        }
-
-        always {
-            echo "Cleaning up workspace..."
-            cleanWs()
-        }
-    }
-}
