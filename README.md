@@ -1,52 +1,177 @@
-#  CI/CD Pipeline with Jenkins, Ansible, and Tomcat Server Deployment
+# 🚀 End-to-End DevSecOps CI/CD Pipeline with Jenkins Master–Agent Architecture
 
-This project involves automating the process of building, testing, analyzing code quality, and deploying a Spring Boot application using Jenkins, Ansible, and a Tomcat server. The process uses Ansible playbooks for deployment, integrates SonarCloud for code quality analysis, and deploys the WAR file directly from Jenkins to a Tomcat server.
+## 📌 Project Overview
 
-## Technologies and Tools:
+This project implements a **real-world DevSecOps CI/CD pipeline** using a distributed Jenkins Master–Agent architecture. It automates the complete software delivery lifecycle from source code checkout to deployment on a Tomcat server, including build, test, security analysis, and automated deployment.
 
-This project focuses on continuous integration and deployment (CI/CD) using the following tools:
-- *Jenkins*: Automates the build, test, and deployment process.
-- *Ansible*: Orchestrates deployment tasks.
-- *GitHub*: Stores the code repository and configurations.
-- *SonarCloud*: Performs code quality analysis.
-- *Spring Boot*: Application framework.
-- *Java and Maven*: Builds the Spring Boot project.
-- *Bash Scripting*: Automates certain tasks including taking a backup of an exixting (running) tomcat application.
-- *Tomcat Server*: Hosts the application.
-
-### Key Features:
-- Automated build and test using Maven.
-- Integrated SonarCloud for code quality analysis.
-- Deployment to Tomcat server using Ansible.
-- Used bash scripts to automate certain tasks including taking a backup of an exixting tomcat application.
-- A seamless pipeline for continuous integration and deployment.
+The system also includes infrastructure automation scripts for Jenkins setup, SSH configuration, and agent provisioning.
 
 ---
 
-## Steps Implemented:
+## 🏗️ System Architecture
 
-1. Setting up jenkins master and agent in an EC2 instance using bash scripting.
-2. Created a SonarCloud account, configured it with jenkins and used it for code quality analysis. 
-3. The pipeline which is configured in Jenkins with the following stages: 
-   - *Checkout*: Clones the project from the GitHub repository.
-   - *Build*: Uses Maven to clean and build the project.
-   - *Test*: Runs unit tests using Maven.
-   - *SonarCloud Analysis*: Analyzes code quality using SonarCloud.
-   - *Deployment*: Deploys the application to a Tomcat server using Ansible.
-4. Ansible Deployment:
-   - Installed Ansible on the Jenkins agent server.
-   - Created an inventory file to define the Tomcat server.
-   - Created a deploy.yaml Ansible playbook to:
-   - Backup the existing WAR file.
-   - Deploy the new WAR file to the Tomcat server.
-5. Tomcat Deployment:
-   - Installed Tomcat server on the Jenkins agent server.
-   - Set up permissions for the jenkins-agent user to access Tomcat directories.
-   - The WAR file was deployed directly from Jenkins' target folder after the build.
+GitHub Repository
+        │
+        ▼
+Jenkins Master Server (Controller)
+- CI/CD orchestration
+- Job scheduling
+- Pipeline management
+        │
+        ▼
+Jenkins Agent Server (Worker Node)
+- Executes builds (Maven)
+- Runs tests
+- Performs SonarCloud analysis
+- Executes Ansible deployment
+        │
+        ▼
+Ansible Deployment Layer
+- Backup existing deployment
+- Stop Tomcat server
+- Deploy new WAR file
+- Restart Tomcat
+        │
+        ▼
+Tomcat Application Server
+- Hosts deployed Java application
 
 ---
 
-## Conclusion:
+## ⚙️ Tech Stack
 
-The project successfully automated the CI/CD process using Jenkins, Ansible, Tomcat. The Spring Boot application was deployed on the Tomcat server without using a repository manager like Nexus, by directly copying the artifact from Jenkins' build folder.
+- GitHub – Source Code Management  
+- Jenkins – CI/CD Orchestration (Master–Agent setup)  
+- Maven – Build automation for Java/Spring Boot  
+- SonarCloud – Code quality and security analysis  
+- Ansible – Deployment automation  
+- Tomcat Server – Application hosting  
+- Bash Scripts – Infrastructure automation  
 
+---
+
+## 🔄 CI/CD Pipeline Flow
+
+1. Code is pushed to GitHub repository  
+2. Jenkins Master triggers pipeline  
+3. Jenkins Agent pulls source code  
+4. Maven builds the application (WAR file)  
+5. Unit tests are executed  
+6. SonarCloud performs code quality analysis  
+7. If successful, Ansible deploys application to Tomcat  
+8. Application is restarted and becomes live  
+
+---
+
+## 🔐 DevSecOps Integration (SonarCloud)
+
+- Static code analysis for bugs and vulnerabilities  
+- Code smell detection  
+- Maintainability checks  
+- Quality gate ensures only high-quality code is deployed  
+
+---
+
+## 🧩 Jenkins Master–Agent Architecture
+
+### Master Node
+- Controls CI/CD pipeline execution  
+- Manages jobs and scheduling  
+- Does NOT execute build workloads  
+
+### Agent Node
+- Executes build, test, scan, and deployment tasks  
+- Improves scalability and isolation  
+- Connects securely via SSH  
+
+---
+
+## 🚀 Deployment Strategy (Ansible + Tomcat)
+
+Ansible performs:
+
+- Backup of existing WAR file  
+- Stops Tomcat server  
+- Removes old deployment  
+- Copies new WAR file  
+- Restarts Tomcat server  
+
+This ensures controlled and repeatable deployments.
+
+---
+
+## 💾 Backup Strategy
+
+A backup script is executed before deployment:
+
+- Archives `/opt/tomcat/webapps`  
+- Creates timestamped `.tar.gz` backups  
+- Enables manual rollback if needed  
+
+---
+
+## 🧰 Infrastructure Automation
+
+### Jenkins Master Setup
+- Installs Jenkins
+- Configures service
+- Retrieves admin password
+
+### Jenkins Agent Setup
+- Creates agent user
+- Configures SSH access
+- Enables secure master-agent communication
+
+### SSH Key Management
+- Generates key pair on master
+- Public key installed on agent for authentication
+
+---
+
+## 📊 Key Features
+
+- Distributed Jenkins architecture (Master–Agent)  
+- Full CI/CD pipeline automation  
+- Code quality enforcement (SonarCloud)  
+- Automated deployment using Ansible  
+- Tomcat-based application hosting  
+- Infrastructure automation via Bash scripts  
+- Backup-based deployment safety  
+
+---
+
+## 📉 Failure Handling
+
+- SonarCloud failure → pipeline stops  
+- Build failure → deployment skipped  
+- Ansible failure → deployment not executed  
+- Backup ensures rollback capability  
+
+---
+
+## 📈 Future Improvements
+
+- Add Docker-based deployment  
+- Implement automated rollback strategy  
+- Add Slack/email notifications  
+- Introduce dev/staging/prod environments  
+- Add artifact versioning and storage  
+- Replace manual SSH setup with Ansible/Terraform  
+
+---
+
+## 🧠 What This Project Demonstrates
+
+- Real-world CI/CD pipeline design  
+- DevSecOps practices using SonarCloud  
+- Jenkins distributed architecture  
+- Configuration management using Ansible  
+- Infrastructure automation using Bash  
+- Deployment safety through backup strategy  
+- End-to-end software delivery lifecycle understanding  
+
+---
+
+## 🏁 Conclusion
+
+This project demonstrates a **production-style DevSecOps CI/CD pipeline** using Jenkins, Maven, SonarCloud, Ansible, and Tomcat with a distributed Master–Agent architecture, showcasing full automation from code commit to deployment.
